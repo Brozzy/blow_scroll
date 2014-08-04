@@ -13,99 +13,60 @@
 		script.onload = script.onreadystatechange = function(){
 			if (!done && (!this.readyState || this.readyState == "loaded" || this.readyState == "complete")) {
 				done = true;
-				initMyBookmarklet();
+				getUserMedia({audio:true}, gotStream);
+				//blowScroll();
 			}
 		};
 		document.getElementsByTagName("head")[0].appendChild(script);
 	} else {
-		initMyBookmarklet();
+		getUserMedia({audio:true}, gotStream);
 	}
-	//bookmarklet popup
-	   $('body').append('<div class="zdravdih-bookmarklet"><div class="inner-book"><div class="inner-section"><p>Microphone page scrolling</p></div><div class="inner-section"><input type="range" id="myRange" value="90" style="float:left	"> <p id="intensity-value">90</p> </div><div class="inner-section"><input type="button" value="Stop" id="last-button"></div></div></div>');
-	   	
-	   $('.zdravdih-bookmarklet').css({
-		'width':'100%',
-		'height':'0px',
-		'background':'rgba(0,0,0,0.9)',
-		'position':'fixed',
-		'bottom':'0px',
-		'z-index':'9999',
-		'display':'hide',
-	   });
-	   
+	
+	
+	//Initializing an Audio Context
+	  window.AudioContext = window.AudioContext || 
+	  window.webkitAudioContext || 
+	  window.mozAudioContext || 
+	  window.oAudioContext || 
+	  window.msAudioContext;
 
-	   $(function() {
-			$('.zdravdih-bookmarklet').animate({ height: '60px' }, 1000);
-	    });
-	  
-	   $('.zdravdih-bookmarklet .inner-book').css({
-			'width':'60%',
-			'margin':'20px auto',
-			'font-weight':'bold',
-		});
-	   
-	   $('.zdravdih-bookmarklet .inner-book .inner-section').css({
-			'float':'left',
-			'width':'32%',
-			
-	   });
-	    $('.zdravdih-bookmarklet .inner-book .inner-section #last-button').css({
-			'float':'right',
-			
-	   });
-	
-	//intensity value
-	$('#myRange').click(function(){
-		x = document.getElementById("myRange").value;
-		document.getElementById("intensity-value").innerHTML = x;
-	});
-    
-	//Start stop button
-	$('#last-button').toggle(function(){
-	   $(this).val("Start");
-	   
-		},
-		function(){
-			$(this).val("Stop");
-		});
-	 
-	 
-	//scrolling on click
-	var direction = 0;
-	
-	function initMyBookmarklet() {
-		(window.myBookmarklet = function() {
-				jQuery('html,body').click(function(){
-					
-					var y = $(window).scrollTop();
-					if(direction == 0){
-						
-						y = y+200;
-						jQuery('html,body').animate({scrollTop:y});
-					} 
-					if(direction == 1){
-						
-						y = y-200;
-						jQuery('html,body').animate({scrollTop:y});
-					}
-					 
-				});
-				
-				$(window).scroll(function() {
-					if($(window).scrollTop() + $(window).height() == $(document).height()) {
-					direction = 1;
-					}
-					
-					else if($(window).scrollTop() == 0){
-						direction = 0;
-					}
-				});
-				
-				
-				
-		})();
+	var audioContext = new AudioContext();
+
+	function error() {
+		alert('Stream generation failed.');
 	}
 
+	function getUserMedia(dictionary, callback) {
+		try {
+			navigator.getUserMedia = 
+			navigator.getUserMedia ||
+        	navigator.webkitGetUserMedia ||
+        	navigator.mozGetUserMedia;
+			navigator.getUserMedia(dictionary, callback, error);
+    } catch (e) {
+        alert('getUserMedia threw exception :' + e);
+		}
+	}
+
+	function gotStream(stream) {
+		// Create an AudioNode from the stream.
+		var mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+		// Connect it to the destination.
+		
+		blowScroll();
+	}
+   	
+	function blowScroll(){
+			
+			var y = $(window).scrollTop();
+			y = y+1200;
+			jQuery('html,body').animate({scrollTop:y});
+	}
+	
+
+
+	
 })();
 
 
