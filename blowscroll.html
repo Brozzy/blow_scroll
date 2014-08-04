@@ -1,2 +1,37 @@
-<a href="javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://github.com/Brozzy/blow_scroll/blob/master/slide.js';})();">Externalized Bookmarklet</a>
+<a href="javascript:
+	(function () {
+	var v = '1.3.2';
+	
+	if (window.jQuery === undefined || window.jQuery.fn.jquery < v) { 
+		done = false;
+		script = document.createElement( 'script' );
+		script.src = 'http://ajax.googleapis.com/ajax/libs/jquery/' + v + '/jquery.min.js';
+		script.onload = script.onreadystatechange = function(){
+			if (!done && (!this.readyState || this.readyState == 'loaded' || this.readyState == 'complete')) {
+				done = true;
+				blowScroll();
+			}
+		};
+		document.getElementsByTagName('head')[0].appendChild(script);
+	}
+	else {
+		blowScroll();
+	}
+ 
+	function blowScroll() {
+		jQuery('html, body').click(function(){
+			var y = $(window).scrollTop();
+			y = y+200;
+			jQuery('html,body').animate({scrollTop:y});
+		});
+	}
+		
+		
+ }());
+
+">Blow scroll</a>
+
+
+
+
 
