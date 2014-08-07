@@ -1,0 +1,165 @@
+<!doctype html>
+
+<html lang="sl">
+<head>
+	<meta charset="utf-8">
+	<title> Audio API </title>
+	  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
+
+	
+</head>
+
+<body>
+	<canvas id="canvas" width="512" height="256" ></canvas>
+	<p id="demo"></p>
+
+	
+	
+	
+	
+	
+
+	<!-- ----------------------------------------------------- -->
+ 
+		<style>
+		#canvas {
+		margin-left: auto;
+		margin-right: auto;
+		display: block;
+		background-color: black;
+		margin-top:50px;
+		}
+		#controls {
+		text-align: center;
+		}
+		#start_button, #stop_button {
+		font-size: 16pt;
+		}
+		</style>
+ 
+<!-- ----------------------------------------------------- -->
+	<script>
+	
+	 // Global Variables for Audio
+		var audioContext;
+		var audioBuffer;
+		var sourceNode;
+		var analyserNode;
+		var javascriptNode;
+		var audioData = null;
+		var audioPlaying = false;
+		var sampleSize = 1024; // number of samples to collect before analyzing data
+		var fftSize = 1024; // must be power of two // **
+		var frequencyArray; // array to hold frequency data
+		 
+		// Global Variables for the Graphics
+		var canvasWidth = 512;
+		var canvasHeight = 256;
+		var ctx;
+		var gradient; // **
+
+
+	// Hacks to deal with different function names in different browsers
+		window.requestAnimFrame = (function(){
+			return window.requestAnimationFrame ||
+				window.webkitRequestAnimationFrame ||
+				window.mozRequestAnimationFrame ||
+				function(callback, element){
+				window.setTimeout(callback, 1000 / 60);
+				};
+		})();
+
+		
+		//Create audioContext
+		window.AudioContext = window.AudioContext ||
+							window.webkitAudioContext ||
+							window.mozAudioContext ||
+							window.oAudioContext ||	
+							window.msAudioContext;
+		
+		var audioContext = new AudioContext();
+		
+		//On load call getUserMedia function
+		window.onload = getUserMedia({audio:true}, goStream);
+		
+		//getUserMedia function --> permission to use a media device (microphone)
+		
+		function getUserMedia(dictionary, callback){
+			try{
+				navigator.getUserMedia = navigator.getUserMedia ||
+										navigator.webkitGetUserMedia ||
+										navigator.mozGetUserMedia;
+				
+				navigator.getUserMedia(dictionary, callback, error);						
+			}
+			catch(e){
+				alert('getUserMedia threw exception :' + e);
+			}
+		}
+		
+		//get canvas content --> for visual representation 
+		 ctx = $("#canvas").get()[0].getContext("2d");
+			gradient = ctx.createLinearGradient(0,0,512,0); // **
+			gradient.addColorStop(0.0,'#ff0000'); // **
+			gradient.addColorStop(0.25,'#ffff00'); // **
+			gradient.addColorStop(0.5,'#ffffff'); // **
+			gradient.addColorStop(1.0,'#ffffff'); // **
+
+		//main function --> create nodes, array for storing data and connect nodes
+		function goStream(stream){
+		
+			// create the media stream from the audio input source (microphone)
+			sourceNode = audioContext.createMediaStreamSource(stream);
+			audioStream = stream;
+
+			analyserNode   = audioContext.createAnalyser();
+			
+			analyserNode.smoothingTimeConstant = 0.0; // **
+			analyserNode.fftSize = fftSize; // **
+
+			javascriptNode = audioContext.createScriptProcessor(sampleSize, 1, 1);
+
+			
+			// setup the event handler that is triggered every time enough samples have been collected
+			// trigger the audio analysis and draw one column in the display based on the results
+			javascriptNode.onaudioprocess = function () {
+
+				frequencyArray = new Uint8Array(analyserNode.frequencyBinCount);
+				analyserNode.getByteFrequencyData(frequencyArray);
+
+				// draw one column of the display
+				requestAnimFrame(drawFrequencyDomain);
+			}
+
+			// Now connect the nodes together
+			// Do not connect source node to destination - to avoid feedback
+			sourceNode.connect(analyserNode);
+			analyserNode.connect(javascriptNode);
+			javascriptNode.connect(audioContext.destination);
+			
+		}
+		
+		//Error function
+		function error(){
+			alert('Stream generation failed');
+		}
+		
+		//draw animation on canvas element
+		 function drawFrequencyDomain() {
+			clearCanvas();
+			for (var i = 0; i < frequencyArray.length; i++) {
+				ctx.fillStyle = '#000000'; // **
+				var y = canvasHeight - 	(frequencyArray[i]); // **
+				ctx.fillRect(i,0,1,y); // **
+			}
+		}
+		
+ 
+		//Clear canvas function
+		function clearCanvas() {
+			 ctx.fillStyle = gradient; // **
+			 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+		}
+		
+	</script>
+</body>
